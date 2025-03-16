@@ -51,6 +51,7 @@ outname = airrFile.toString()
 library(data.table)
 library(dplyr)
 library(stringr)
+library(readr)
 
 
 data <- data.table::fread("${airrFile}", data.table = F)
@@ -119,7 +120,7 @@ for (i in 1:nrow(mapping)) {
 data[, j_call := unlist(j_call_changed)]
 
 # Write the full output file
-write.table(data, sep = "\t", file = paste0("${outname}", ".tsv"), row.names = FALSE)
+write.table(data, sep = "\t", file = paste0("${outname}", ".tsv"), row.names = F)
 
 """
 
@@ -145,6 +146,7 @@ outname = airrFile.toString()
 library(data.table)
 library(dplyr)
 library(stringr)
+library(readr)
 
 
 data <- data.table::fread("${airrFile}", data.table = F)
@@ -213,7 +215,7 @@ for (i in 1:nrow(mapping)) {
 data[, j_call := unlist(j_call_changed)]
 
 # Write the full output file
-write.table(data, sep = "\t", file = paste0("${outname}", ".tsv"), row.names = FALSE)
+write.table(data, sep = "\t", file = paste0("${outname}", ".tsv"), row.names = F)
 
 """
 
