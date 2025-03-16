@@ -32,8 +32,89 @@ Channel.fromPath(params.d_germline_file, type: 'any').map{ file -> tuple(file.ba
 Channel.fromPath(params.j_germline_file, type: 'any').map{ file -> tuple(file.baseName, file) }.set{g_21_germlineFastaFile_g_19}
 
 
+process creat_ref_set {
+
+input:
+ set val(name1), file(v_germline_file) from g_14_germlineFastaFile_g_19
+ set val(name2), file(d_germline_file) from g_20_germlineFastaFile_g_19
+ set val(name3), file(j_germline_file) from g_21_germlineFastaFile_g_19
+
+output:
+ set val("reference_set"), file("${reference_set}")  into g_19_germlineFastaFile0_g_0
+
+script:
+
+
+reference_set = "reference_set_makedb.fasta"
+
+"""
+	cat ${v_germline_file} ${d_germline_file} ${j_germline_file} > ${reference_set}
+
+"""
+
+}
+
+
+process ogrdbstats_report {
+
+publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*pdf$/) "ogrdbstats_alignment/$filename"}
+publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*csv$/) "ogrdbstats_alignment/$filename"}
+input:
+ set val(name),file(airrFile) from g_3_outputFileTSV_g_0
+ set val(name1), file(germline_file) from g_19_germlineFastaFile0_g_0
+ set val(name2), file(v_germline_file) from g_14_germlineFastaFile_g_0
+
+output:
+ file "*pdf"  into g_0_outputFilePdf00
+ file "*csv"  into g_0_outputFileCSV11
+
+script:
+
+// general params
+chain = params.ogrdbstats_report.chain
+outname = airrFile.name.toString().substring(0, airrFile.name.toString().indexOf("_db-pass"))
+
+"""
+
+germline_file_path=\$(realpath ${germline_file})
+
+novel=""
+
+if grep -q "_[A-Za-z][0-9]" ${v_germline_file}; then
+	awk '/^>/{f=0} \$0 ~ /_[A-Za-z][0-9]/ {f=1} f' ${v_germline_file} > novel_sequences.fasta
+	novel=\$(realpath novel_sequences.fasta)
+	diff \$germline_file_path \$novel | grep '^<' | sed 's/^< //' > personal_germline.fasta
+	germline_file_path=\$(realpath personal_germline.fasta)
+	novel="--inf_file \$novel"
+fi
+
+IFS='\t' read -a var < ${airrFile}
+
+airrfile=${airrFile}
+
+if [[ ! "\${var[*]}" =~ "v_call_genotyped" ]]; then
+    awk -F'\t' '{col=\$5;gsub("call", "call_genotyped", col); print \$0 "\t" col}' ${airrFile} > ${outname}_genotyped.tsv
+    airrfile=${outname}_genotyped.tsv
+fi
+
+airrFile_path=\$(realpath \$airrfile)
+
+
+run_ogrdbstats \
+	\$germline_file_path \
+	"Homosapiens" \
+	\$airrFile_path \
+	${chain} \
+	\$novel 
+
+"""
+
+}
+
+
 process changes_names_musa {
 
+publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*.tsv$/) "rearrangements/$filename"}
 input:
  set val(name),file(airrFile) from g_3_outputFileTSV_g_16
  set val(name1),file(musa) from g_18_outputFileTSV_g_16
@@ -106,6 +187,7 @@ write.table(data, sep = "\t", file = paste0("${outname}", ".tsv"), row.names = F
 
 process changes_names_musa_1 {
 
+publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*.tsv$/) "rearrangements/$filename"}
 input:
  set val(name),file(airrFile) from g_9_outputFileTSV_g_17
  set val(name1),file(musa) from g_18_outputFileTSV_g_17
@@ -260,8 +342,8 @@ genoV <- fread("${v_genotype}", data.table = FALSE, colClasses = "character")
 # add information to the genotype table
 genoV <-
   genoV %>% dplyr::group_by(gene) %>% dplyr::mutate(
-    Freq_by_Clone = addFreqInfo(tab_clone_v, gene, genotyped_alleles),
-    Freq_by_Seq = addFreqInfo(tab_freq_v, gene, genotyped_alleles)
+    Freq_by_Clone = addFreqInfo(tab_clone_v, gene, GENOTYPED_ALLELES),
+    Freq_by_Seq = addFreqInfo(tab_freq_v, gene, GENOTYPED_ALLELES)
   )
 
 
@@ -276,8 +358,8 @@ genoJ <- fread("${j_genotype}", data.table = FALSE, colClasses = "character")
 # add information to the genotype table
 genoJ <-
   genoJ %>% dplyr::group_by(gene) %>% dplyr::mutate(
-    Freq_by_Clone = addFreqInfo(tab_clone_j, gene, genotyped_alleles),
-    Freq_by_Seq = addFreqInfo(tab_freq_j, gene, genotyped_alleles)
+    Freq_by_Clone = addFreqInfo(tab_clone_j, gene, GENOTYPED_ALLELES),
+    Freq_by_Seq = addFreqInfo(tab_freq_j, gene, GENOTYPED_ALLELES)
   )
   
 # for the d_calls; first check if the genotype file for d exists
@@ -297,8 +379,8 @@ if (endsWith("${d_genotype}", ".tsv")){
 	print(genoD)
 	genoD <-
 	  genoD %>% dplyr::group_by(gene) %>% dplyr::mutate(
-	    Freq_by_Clone = addFreqInfo(tab_clone_d, gene, genotyped_alleles),
-	    Freq_by_Seq = addFreqInfo(tab_freq_d, gene, genotyped_alleles)
+	    Freq_by_Clone = addFreqInfo(tab_clone_d, gene, GENOTYPED_ALLELES),
+	    Freq_by_Seq = addFreqInfo(tab_freq_d, gene, GENOTYPED_ALLELES)
 	  )
 	  
 	genos <- plyr::rbind.fill(genoV, genoD, genoJ)
@@ -311,7 +393,7 @@ genos[["Freq_by_Seq"]] <- gsub("NA", "0", genos[["Freq_by_Seq"]])
 
 # rename the genotyped_allele columns
 new_genotyped_allele_name = "GENOTYPED_ALLELES"
-col_loc = which(names(genos)=='genotyped_alleles')
+col_loc = which(names(genos)=='GENOTYPED_ALLELES')
 names(genos)[col_loc] = new_genotyped_allele_name
 
 
@@ -319,86 +401,6 @@ names(genos)[col_loc] = new_genotyped_allele_name
 print("Writing Genotype Report")
 write.table(genos, file = paste0("${outname}","_Final_genotype.tsv"), row.names = F, sep = "\t")
 """
-}
-
-
-process creat_ref_set {
-
-input:
- set val(name1), file(v_germline_file) from g_14_germlineFastaFile_g_19
- set val(name2), file(d_germline_file) from g_20_germlineFastaFile_g_19
- set val(name3), file(j_germline_file) from g_21_germlineFastaFile_g_19
-
-output:
- set val("reference_set"), file("${reference_set}")  into g_19_germlineFastaFile0_g_0
-
-script:
-
-
-reference_set = "reference_set_makedb.fasta"
-
-"""
-	cat ${v_germline_file} ${d_germline_file} ${j_germline_file} > ${reference_set}
-
-"""
-
-}
-
-
-process ogrdbstats_report {
-
-publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*pdf$/) "ogrdbstats_alignment/$filename"}
-publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /.*csv$/) "ogrdbstats_alignment/$filename"}
-input:
- set val(name),file(airrFile) from g_3_outputFileTSV_g_0
- set val(name1), file(germline_file) from g_19_germlineFastaFile0_g_0
- set val(name2), file(v_germline_file) from g_14_germlineFastaFile_g_0
-
-output:
- file "*pdf"  into g_0_outputFilePdf00
- file "*csv"  into g_0_outputFileCSV11
-
-script:
-
-// general params
-chain = params.ogrdbstats_report.chain
-outname = airrFile.name.toString().substring(0, airrFile.name.toString().indexOf("_db-pass"))
-
-"""
-
-germline_file_path=\$(realpath ${germline_file})
-
-novel=""
-
-if grep -q "_[A-Za-z][0-9]" ${v_germline_file}; then
-	awk '/^>/{f=0} \$0 ~ /_[A-Za-z][0-9]/ {f=1} f' ${v_germline_file} > novel_sequences.fasta
-	novel=\$(realpath novel_sequences.fasta)
-	diff \$germline_file_path \$novel | grep '^<' | sed 's/^< //' > personal_germline.fasta
-	germline_file_path=\$(realpath personal_germline.fasta)
-	novel="--inf_file \$novel"
-fi
-
-IFS='\t' read -a var < ${airrFile}
-
-airrfile=${airrFile}
-
-if [[ ! "\${var[*]}" =~ "v_call_genotyped" ]]; then
-    awk -F'\t' '{col=\$5;gsub("call", "call_genotyped", col); print \$0 "\t" col}' ${airrFile} > ${outname}_genotyped.tsv
-    airrfile=${outname}_genotyped.tsv
-fi
-
-airrFile_path=\$(realpath \$airrfile)
-
-
-run_ogrdbstats \
-	\$germline_file_path \
-	"Homosapiens" \
-	\$airrFile_path \
-	${chain} \
-	\$novel 
-
-"""
-
 }
 
 
