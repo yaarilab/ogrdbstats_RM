@@ -65,7 +65,7 @@ mapping <- read_csv("${musa}") %>%
   select(allele, new_tag) %>%
   unique()
 
-mapping <- mapping[grepl(chain,mapping[["allele"]]),]
+mapping <- mapping[grepl("${chain}",mapping[["allele"]]),]
 
 # Add new columns to data
 data[, `:=`(
@@ -160,7 +160,7 @@ mapping <- read_csv("${musa}") %>%
   select(allele, new_tag) %>%
   unique()
 
-mapping <- mapping[grepl(chain,mapping[["allele"]]),]
+mapping <- mapping[grepl("${chain}",mapping[["allele"]]),]
 
 # Add new columns to data
 data[, `:=`(
