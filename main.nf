@@ -67,57 +67,34 @@ mapping <- read_csv("${musa}") %>%
 
 mapping <- mapping[grepl("${chain}",mapping[["allele"]]),]
 
-# Add new columns to data
-data[, `:=`(
-  v_call_changed = v_call,
-  d_call_changed = d_call,
-  j_call_changed = j_call
-)]
+setDT(mapping)
+
+# Create named vector for fast lookup
+replace_map <- setNames(mapping[["new_tag"]], mapping[["allele"]])
+
+# Apply vectorized replacement
+data[, v_call := sapply(v_call, function(x) {
+  calls <- unlist(strsplit(x, ","))  # Split into components
+  calls <- fcoalesce(replace_map[calls], calls)  # Replace if found
+  paste(calls, collapse = ",")  # Rejoin
+})]
 
 
-
-# Apply changes to v_call
-for (i in 1:nrow(mapping)) {
-  old_id <- changes[i, "old_id"]
-  new_id <- changes[i, "new_id"]
-  data[, v_call_changed := lapply(v_call_changed, function(x) {
-	    calls <- unlist(strsplit(x, ",")) # Split by ","
-	    calls[calls == new_id] <- old_id  # Replace only exact matches
-	    paste(calls, collapse = ",")      # Rejoin with ","
-	  })]
-}
-data[, v_call := unlist(v_call_changed)]
+# Apply vectorized replacement
+data[, d_call := sapply(d_call, function(x) {
+  calls <- unlist(strsplit(x, ","))  # Split into components
+  calls <- fcoalesce(replace_map[calls], calls)  # Replace if found
+  paste(calls, collapse = ",")  # Rejoin
+})]
 
 
-# Apply changes to d_call if chain is IGH
-if ("${chain}" == "IGH") {
+# Apply vectorized replacement
+data[, j_call := sapply(j_call, function(x) {
+  calls <- unlist(strsplit(x, ","))  # Split into components
+  calls <- fcoalesce(replace_map[calls], calls)  # Replace if found
+  paste(calls, collapse = ",")  # Rejoin
+})]
 
-	# Apply changes to d_call
-	for (i in 1:nrow(mapping)) {
-	  old_id <- changes[i, "old_id"]
-	  new_id <- changes[i, "new_id"]
-	  data[, d_call_changed := lapply(d_call_changed, function(x) {
-		    calls <- unlist(strsplit(x, ",")) # Split by ","
-		    calls[calls == new_id] <- old_id  # Replace only exact matches
-		    paste(calls, collapse = ",")      # Rejoin with ","
-		  })]
-	}
-	data[, d_call := unlist(d_call_changed)]
-
-}
-
-
-# Apply changes to j_call
-for (i in 1:nrow(mapping)) {
-  old_id <- changes[i, "old_id"]
-  new_id <- changes[i, "new_id"]
-  data[, j_call_changed := lapply(j_call_changed, function(x) {
-	    calls <- unlist(strsplit(x, ",")) # Split by ","
-	    calls[calls == new_id] <- old_id  # Replace only exact matches
-	    paste(calls, collapse = ",")      # Rejoin with ","
-	  })]
-}
-data[, j_call := unlist(j_call_changed)]
 
 # Write the full output file
 write.table(data, sep = "\t", file = paste0("${outname}", ".tsv"), row.names = F)
@@ -162,57 +139,34 @@ mapping <- read_csv("${musa}") %>%
 
 mapping <- mapping[grepl("${chain}",mapping[["allele"]]),]
 
-# Add new columns to data
-data[, `:=`(
-  v_call_changed = v_call,
-  d_call_changed = d_call,
-  j_call_changed = j_call
-)]
+setDT(mapping)
+
+# Create named vector for fast lookup
+replace_map <- setNames(mapping[["new_tag"]], mapping[["allele"]])
+
+# Apply vectorized replacement
+data[, v_call := sapply(v_call, function(x) {
+  calls <- unlist(strsplit(x, ","))  # Split into components
+  calls <- fcoalesce(replace_map[calls], calls)  # Replace if found
+  paste(calls, collapse = ",")  # Rejoin
+})]
 
 
-
-# Apply changes to v_call
-for (i in 1:nrow(mapping)) {
-  old_id <- changes[i, "old_id"]
-  new_id <- changes[i, "new_id"]
-  data[, v_call_changed := lapply(v_call_changed, function(x) {
-	    calls <- unlist(strsplit(x, ",")) # Split by ","
-	    calls[calls == new_id] <- old_id  # Replace only exact matches
-	    paste(calls, collapse = ",")      # Rejoin with ","
-	  })]
-}
-data[, v_call := unlist(v_call_changed)]
+# Apply vectorized replacement
+data[, d_call := sapply(d_call, function(x) {
+  calls <- unlist(strsplit(x, ","))  # Split into components
+  calls <- fcoalesce(replace_map[calls], calls)  # Replace if found
+  paste(calls, collapse = ",")  # Rejoin
+})]
 
 
-# Apply changes to d_call if chain is IGH
-if ("${chain}" == "IGH") {
+# Apply vectorized replacement
+data[, j_call := sapply(j_call, function(x) {
+  calls <- unlist(strsplit(x, ","))  # Split into components
+  calls <- fcoalesce(replace_map[calls], calls)  # Replace if found
+  paste(calls, collapse = ",")  # Rejoin
+})]
 
-	# Apply changes to d_call
-	for (i in 1:nrow(mapping)) {
-	  old_id <- changes[i, "old_id"]
-	  new_id <- changes[i, "new_id"]
-	  data[, d_call_changed := lapply(d_call_changed, function(x) {
-		    calls <- unlist(strsplit(x, ",")) # Split by ","
-		    calls[calls == new_id] <- old_id  # Replace only exact matches
-		    paste(calls, collapse = ",")      # Rejoin with ","
-		  })]
-	}
-	data[, d_call := unlist(d_call_changed)]
-
-}
-
-
-# Apply changes to j_call
-for (i in 1:nrow(mapping)) {
-  old_id <- changes[i, "old_id"]
-  new_id <- changes[i, "new_id"]
-  data[, j_call_changed := lapply(j_call_changed, function(x) {
-	    calls <- unlist(strsplit(x, ",")) # Split by ","
-	    calls[calls == new_id] <- old_id  # Replace only exact matches
-	    paste(calls, collapse = ",")      # Rejoin with ","
-	  })]
-}
-data[, j_call := unlist(j_call_changed)]
 
 # Write the full output file
 write.table(data, sep = "\t", file = paste0("${outname}", ".tsv"), row.names = F)
