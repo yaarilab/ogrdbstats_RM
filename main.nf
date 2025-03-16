@@ -203,8 +203,8 @@ process VDJbase_genotype_report {
 
 publishDir params.outdir, mode: 'copy', saveAs: {filename -> if (filename =~ /${outname}_Final_genotype.tsv$/) "genotype_report/$filename"}
 input:
+ set val(name1),file(initial_run) from g_17_outputFileTSV0_g_4
  set val(name2),file(personal_run) from g_16_outputFileTSV0_g_4
- set val(name2),file(personal_run) from g_17_outputFileTSV0_g_4
  set val(name3),file(v_genotype) from g_12_outputFileTSV_g_4
  set val(name4),file(d_genotype) from g_10_outputFileTSV_g_4
  set val(name5),file(j_genotype) from g_11_outputFileTSV_g_4
