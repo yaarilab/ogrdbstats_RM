@@ -6,6 +6,9 @@ params.ogrdbstats_report.chain = params.chain
 
 // Process Parameters for changes_names_musa:
 params.changes_names_musa.chain = params.ndm_chain
+
+// Process Parameters for changes_names_musa_1:
+params.changes_names_musa_1.chain = params.ndm_chain
 if (!params.airr_file){params.airr_file = ""} 
 if (!params.init_run){params.init_run = ""} 
 if (!params.d_genotype){params.d_genotype = ""} 
@@ -61,7 +64,7 @@ mapping <- read_csv("${musa}") %>%
   select(allele, new_tag) %>%
   unique()
 
-mapping <- mapping[grepl(chain,mapping$allele),]
+mapping <- mapping[grepl(chain,mapping[["allele"]]),]
 
 # Add new columns to data
 data[, `:=`(
@@ -155,7 +158,7 @@ mapping <- read_csv("${musa}") %>%
   select(allele, new_tag) %>%
   unique()
 
-mapping <- mapping[grepl(chain,mapping$allele),]
+mapping <- mapping[grepl(chain,mapping[["allele"]]),]
 
 # Add new columns to data
 data[, `:=`(
