@@ -153,28 +153,32 @@ setDT(mapping)
 # Create named vector for fast lookup
 replace_map <- setNames(mapping[["new_tag"]], mapping[["allele"]])
 
-# Apply vectorized replacement
+
+# Ensure v_call, d_call, and j_call are characters before processing
 data[, v_call := sapply(v_call, function(x) {
+  x <- as.character(x)  # Convert to character
+  if (is.na(x)) return(NA)  # Handle NAs
   calls <- unlist(strsplit(x, ","))  # Split into components
   calls <- fcoalesce(replace_map[calls], calls)  # Replace if found
   paste(calls, collapse = ",")  # Rejoin
 })]
 
-
-# Apply vectorized replacement
 data[, d_call := sapply(d_call, function(x) {
-  calls <- unlist(strsplit(x, ","))  # Split into components
-  calls <- fcoalesce(replace_map[calls], calls)  # Replace if found
-  paste(calls, collapse = ",")  # Rejoin
+  x <- as.character(x)
+  if (is.na(x)) return(NA)
+  calls <- unlist(strsplit(x, ","))
+  calls <- fcoalesce(replace_map[calls], calls)
+  paste(calls, collapse = ",")
 })]
 
-
-# Apply vectorized replacement
 data[, j_call := sapply(j_call, function(x) {
-  calls <- unlist(strsplit(x, ","))  # Split into components
-  calls <- fcoalesce(replace_map[calls], calls)  # Replace if found
-  paste(calls, collapse = ",")  # Rejoin
+  x <- as.character(x)
+  if (is.na(x)) return(NA)
+  calls <- unlist(strsplit(x, ","))
+  calls <- fcoalesce(replace_map[calls], calls)
+  paste(calls, collapse = ",")
 })]
+
 
 
 # Write the full output file
@@ -226,28 +230,32 @@ setDT(mapping)
 # Create named vector for fast lookup
 replace_map <- setNames(mapping[["new_tag"]], mapping[["allele"]])
 
-# Apply vectorized replacement
+
+# Ensure v_call, d_call, and j_call are characters before processing
 data[, v_call := sapply(v_call, function(x) {
+  x <- as.character(x)  # Convert to character
+  if (is.na(x)) return(NA)  # Handle NAs
   calls <- unlist(strsplit(x, ","))  # Split into components
   calls <- fcoalesce(replace_map[calls], calls)  # Replace if found
   paste(calls, collapse = ",")  # Rejoin
 })]
 
-
-# Apply vectorized replacement
 data[, d_call := sapply(d_call, function(x) {
-  calls <- unlist(strsplit(x, ","))  # Split into components
-  calls <- fcoalesce(replace_map[calls], calls)  # Replace if found
-  paste(calls, collapse = ",")  # Rejoin
+  x <- as.character(x)
+  if (is.na(x)) return(NA)
+  calls <- unlist(strsplit(x, ","))
+  calls <- fcoalesce(replace_map[calls], calls)
+  paste(calls, collapse = ",")
 })]
 
-
-# Apply vectorized replacement
 data[, j_call := sapply(j_call, function(x) {
-  calls <- unlist(strsplit(x, ","))  # Split into components
-  calls <- fcoalesce(replace_map[calls], calls)  # Replace if found
-  paste(calls, collapse = ",")  # Rejoin
+  x <- as.character(x)
+  if (is.na(x)) return(NA)
+  calls <- unlist(strsplit(x, ","))
+  calls <- fcoalesce(replace_map[calls], calls)
+  paste(calls, collapse = ",")
 })]
+
 
 
 # Write the full output file
